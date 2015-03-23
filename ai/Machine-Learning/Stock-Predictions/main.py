@@ -19,25 +19,26 @@ def printTransactions(money, k, d, name, owned, prices):
         mu = mean(price)
         c1, c2, c3 = mean(price[0:3]), mean(price[1:4]), mean(price[2:5])
         
-        return (c1, c2, c3, (price[-1]- price[0]) / price[0])
-
+        return (price[-1] - price[-2]) / price[-2]
     
     infos = map(info, prices)
     res = []
     
-    up = filter(lambda x: x[0] < x[1] and x[1] < x[2] and x[-1] > 0, infos)
-    down = filter(lambda x: x[0] > x[1] and x[1] > x[2] and x[-1] < 0, infos)
-    
-    up_sum = sum(map(lambda x: x[-1], up))
-    down_sum = sum(map(lambda x: x[-1], down))
+    drop = []
     
     for i in range(k):
-        c1, c2, c3, rate = info(prices[i])
-        if c2 >= c1 and c3 >= c2 and owned[i] > 0:
+        cur_info = info(prices[i])
+        if cur_info > 0 and owned[i] > 0:
             res.append((name[i], 'SELL', str(owned[i])))
-        elif c2 <= c1 and c3 <= c2:
-            amount = int(money * rate / down_sum / prices[i][-1])
-            if amount > 0: res.append((name[i], 'BUY', str(amount)))
+        elif cur_info < 0:
+            heappush(drop, (cur_info, i, name[i]))
+    
+    while money > 0.0 and drop:
+        rate, idx, n = heappop(drop)
+        amount = int(money / prices[idx][-1])
+        if amount  > 0:
+            res.append((n, 'BUY', str(amount)))
+            money -= amount * prices[idx][-1]
     
     print len(res)
     for r in res:
