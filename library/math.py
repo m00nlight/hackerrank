@@ -74,6 +74,23 @@ def factor(n):
     if n is not 1: ret.append((n, 1))
     return ret
 
+def euler_phi(n):
+    """
+    Type :: Int -> Int
+    Calculate the Euler phi result of number n
+
+    >>> euler_phi(12)
+    4
+
+    >>> euler_phi(17)
+    16
+
+    >>> euler_phi(33)
+    20
+    """
+    facts = factor(n)
+    return reduce(lambda acc, x: acc * (x[0] - 1) // x[0], facts, n)
+
 
 
 if __name__ == '__main__':
