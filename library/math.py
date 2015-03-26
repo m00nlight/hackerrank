@@ -124,6 +124,44 @@ def euler_phi2(n):
     return ret
 
 
+def gen_fact_mod_prime(p):
+    """
+    Type :: Int -> [Int]
+    Generate the fact of i(mod p) for 1 <= i < p, p should be a prime number
+
+    >>> gen_fact_mod_prime(3)
+    [1, 1, 2]
+
+    >>> gen_fact_mod_prime(7)
+    [1, 1, 2, 6, 3, 1, 6]
+    """
+    ret = [1] * p
+    for i in range(2, p): ret[i] = ret[i - 1] * i % p
+    return ret
+
+def fact_mod(n, p, facts):
+    """
+    Type :: (Int, Int, [Int]) -> (Int, Int)
+    Suppose n! = a * p^e (mod p), then the function return (a mod p, e)
+    facts is i!(mod p) for 0 <= i < p
+
+    >>> facts = gen_fact_mod_prime(7)
+    >>> fact_mod(5, 7, facts)
+    (1, 0)
+
+    >>> fact_mod(15, 7, facts)
+    (2, 2)
+    """
+    if (n == 0): return (1, 0)
+    (a, e) = fact_mod(n // p, p, facts)
+    e += n // p
+
+    if (n // p % 2 != 0): return (a * (p - facts[n % p]) % p, e)
+    return (a * facts[n % p] % p, e)
+
+
+
+
 
 if __name__ == '__main__':
     import doctest
