@@ -160,6 +160,27 @@ def fact_mod(n, p, facts):
     return (a * facts[n % p] % p, e)
 
 
+def comb_mod(n, k, p):
+    """
+    Type :: (Int, Int, Int) -> Int
+    Return C(n, k) mod p, p is a prime number.
+
+    >>> comb_mod(5, 3, 7)
+    3
+
+    >>> comb_mod(6, 2, 7)
+    1
+    """
+
+    if n < 0 or k < 0 or n < k: return 0
+    facts = gen_fact_mod_prime(p)
+    a1, e1 = fact_mod(n, p, facts)
+    a2, e2 = fact_mod(k, p, facts)
+    a3, e3 = fact_mod(n - k, p, facts)
+    if (e1 > e2 + e3):
+        return 0
+    else:
+        return a1 * modinv(a2 * a3 % p, p) % p
 
 
 
