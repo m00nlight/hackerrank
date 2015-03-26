@@ -51,6 +51,7 @@ def sieve(m):
 MAXN = 1000
 
 primes = sieve(MAXN)
+primes_set = set(primes)
 
 def factor(n):
     """
@@ -61,7 +62,15 @@ def factor(n):
 
     >>> factor(10007)
     [(10007, 1)]
+    
+    >>> factor(0)
+    Traceback (most recent call last):
+        ...
+    Exception: Should be nonzero number
     """
+    
+    if n is 0: raise Exception("Should be nonzero number")
+    
     ret, i = [], 0
     while n is not 1 and i < len(primes):
         if n % primes[i] == 0:
@@ -77,7 +86,7 @@ def factor(n):
 def euler_phi(n):
     """
     Type :: Int -> Int
-    Calculate the Euler phi result of number n
+    Calculate the Euler phi result of number n in around log(n) of time
 
     >>> euler_phi(12)
     4
@@ -90,6 +99,29 @@ def euler_phi(n):
     """
     facts = factor(n)
     return reduce(lambda acc, x: acc * (x[0] - 1) // x[0], facts, n)
+    
+
+def euler_phi2(n):
+    """
+    Type :: Int -> [Int]
+    Generate the Euler phi result up to number n, and return the result
+    as a list
+    
+    >>> euler_phi2(20) == [0] + [euler_phi(i) for i in range(1, 21)]
+    True
+    
+    >>> euler_phi2(100) == [0] + [euler_phi(i) for i in range(1, 101)]
+    True
+    
+    >>> euler_phi2(1000) == [0] + [euler_phi(i) for i in range(1, 1001)]
+    True
+    """
+    ret = [i for i in range(n + 1)]
+    for i in range(2, n + 1):
+        if ret[i] == i:
+            for j in range(i, n + 1, i): ret[j] = ret[j] // i * (i - 1)
+    
+    return ret
 
 
 
