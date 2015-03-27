@@ -1,5 +1,13 @@
 from __future__ import division
 
+def mod(a, b):
+    """
+    Type :: (Int, Int) -> Int
+    Return modulo of a over b, make sure to return an positive number
+    when b is great than zero
+    """
+    return (a % b + b) % b
+
 def gcd(a, b):
     """
     Type :: (Int, Int) -> Int
@@ -181,6 +189,38 @@ def comb_mod(n, k, p):
         return 0
     else:
         return a1 * modinv(a2 * a3 % p, p) % p
+
+
+def chinese_remainder_theory_for2(x, a, y, b):
+    """
+    Type :: (Int, Int, Int, Int) -> Int
+    Return z for z = a (mod x) and z = b (mod y). Here z is unique modulo 
+    M = lcm(x, y), return (z, M). On failure return, M = -1
+    """
+    g, s, t = exgcd(x, y)
+    if a % g != b % g:
+        return (0, -1)
+    else:
+        return (mod(s * b * x + t * a * y, x * y) // g, x * y // g)
+
+def chinese_remainder_theory(xs, ass):
+    """
+    Type :: ([Int], [Int]) -> Int
+    Return  : z that z[i] = a[i] (mod xs[i]) for 0 <= i < n
+    Require : Require a[i] to be relative coprime to each other
+
+    >>> chinese_remainder_theory([3, 5, 7], [2,3,2])
+    (23, 105)
+    """
+
+    ret = (ass[0], xs[0])
+    for i in range(1, len(xs)):
+        ret = chinese_remainder_theory_for2(ret[1], ret[0], xs[i], ass[i])
+        if ret[1] == -1: break
+
+    return ret
+
+
 
 
 
