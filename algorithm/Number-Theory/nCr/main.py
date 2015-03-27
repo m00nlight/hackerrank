@@ -40,7 +40,7 @@ def power_mod(a, b, m):
         return 1
     else:
         tmp = power_mod(a, b // 2, m)
-        return tmp * tmp % m if b % 2 is 0 else tmp * tmp * a % p
+        return tmp * tmp % m if b % 2 is 0 else tmp * tmp * a % m
 
 def modinv(a, m):
     """
@@ -238,20 +238,55 @@ def comb_mod2(n, r, m):
     Type :: (Int, Int, Int) -> Int
     m is of form p^a, and n is very large
     """
-    a = factor(m)[1]
+    p, a = factor(m)[0]
+
+
+    def factorial(n):
+        return reduce(mul, range(1, n + 1), 1)
+
+    facts = [factorial(i) % m for i in range(m)]
+
+    def n_fact_fact(n):
+        if n < p:
+            return factorial(n) % m
+        else:
+            a1 = factorial(p - 1) % m
+            a2 = factorial(n % p) % m
+            a3 = n_fact_fact(n // p)
+            return power_mod(a1, n // p, m) * a2 * a3 % m
+
+    fs = gen_fact_mod_prime(p)
+
+    a1, e1 = fact_mod(n, p, fs)
+    a2, e2 = fact_mod(r, p, fs)
+    a3, e3 = fact_mod((n - r), p, fs)
+
+    b = a
+    while b > 0 and (e1 - (e2 + e3)) < a:
+        b -= 1
+
+    temp1 = modinv(n_fact_fact(r), m)
+    temp2 = modinv(n_fact_fact(n - r), m)
+
+    print 'b = %d temp1 = %d temp2 = %d' % (b, temp1, temp2)
+    print 'n_fact_fact(5) = %d ' % n_fact_fact(5)
+    print 'n_fact_fact(2) = %d ' % n_fact_fact(2)
+    print 'n_fact_fact(3) = %d ' % n_fact_fact(3) 
+
+    return ((p ** b) * n_fact_fact(n) * temp1 * temp2) % m
 
 
 def solve(n, r):
     xs = [27, 11, 13, 37]
-    ass = [comb_mod2(x) for x in xs]
+    ass = [comb_mod2(n, r, x) for x in xs]
     
     print xs
     print ass
 
     return chinese_remainder_theory(xs, ass)
 
-if __name__ == '__main__':
-    n = int(raw_input())
-    for _ in range(n):
-        n, r = map(int, raw_input().strip().split())
-        print solve(n, r)
+# if __name__ == '__main__':
+#     n = int(raw_input())
+#     for _ in range(n):
+#         n, r = map(int, raw_input().strip().split())
+#         print solve(n, r)
