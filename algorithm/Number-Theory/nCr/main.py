@@ -1,4 +1,5 @@
 from __future__ import division
+from operator import add, mul
 
 def mod(a, b):
     """
@@ -162,7 +163,7 @@ def fact_mod(n, p, facts):
     """
     Type :: (Int, Int, [Int]) -> (Int, Int)
     Suppose n! = a * p^e (mod p), then the function return (a mod p, e)
-    facts is i!(mod p) for 0 <= i < p, use Lucas Theory
+    facts is i!(mod p) for 0 <= i < p, use Lucas theory
 
     >>> facts = gen_fact_mod_prime(7)
     >>> fact_mod(5, 7, facts)
@@ -209,7 +210,7 @@ def chinese_remainder_theory_for2(x, a, y, b):
     M = lcm(x, y), return (z, M). On failure return, M = -1
     """
     g, s, t = exgcd(x, y)
-    if a % g != b % g:
+    if (a % g) != (b % g):
         return (0, -1)
     else:
         return (mod(s * b * x + t * a * y, x * y) // g, x * y // g)
@@ -232,9 +233,25 @@ def chinese_remainder_theory(xs, ass):
     return ret
 
 
+def comb_mod2(n, r, m):
+    """
+    Type :: (Int, Int, Int) -> Int
+    m is of form p^a, and n is very large
+    """
+    a = factor(m)[1]
 
 
+def solve(n, r):
+    xs = [27, 11, 13, 37]
+    ass = [comb_mod2(x) for x in xs]
+    
+    print xs
+    print ass
+
+    return chinese_remainder_theory(xs, ass)
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+    n = int(raw_input())
+    for _ in range(n):
+        n, r = map(int, raw_input().strip().split())
+        print solve(n, r)
