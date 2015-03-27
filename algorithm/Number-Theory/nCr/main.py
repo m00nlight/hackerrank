@@ -38,6 +38,8 @@ def power_mod(a, b, m):
     """
     if b is 0:
         return 1
+    elif b is 1:
+        return a % m
     else:
         tmp = power_mod(a, b // 2, m)
         return tmp * tmp % m if b % 2 is 0 else tmp * tmp * a % m
@@ -240,53 +242,58 @@ def comb_mod2(n, r, m):
     """
     p, a = factor(m)[0]
 
+    facts = [1]
+    for i in range(1,m):
+        if gcd(i, m) == 1:
+            facts.append(facts[i - 1] * i % m)
+        else:
+            facts.append(facts[i - 1])
 
-    def factorial(n):
-        return reduce(mul, range(1, n + 1), 1)
-
-    facts = [factorial(i) % m for i in range(m)]
+    # print "===========facts================="
+    # print facts
+    # print "================================="
 
     def n_fact_fact(n):
-        if n < p:
-            return factorial(n) % m
+        if n is 0 or n is 1:
+            return 1
+        elif n < m:
+            return facts[n] * n_fact_fact(n // p) % m
         else:
-            a1 = factorial(p - 1) % m
-            a2 = factorial(n % p) % m
-            a3 = n_fact_fact(n // p)
-            return power_mod(a1, n // p, m) * a2 * a3 % m
+            a = facts[m - 1]
+            b = facts[n % m]
+            c = n_fact_fact(n // p)
+            # print 'n = %d a = %d b = %d c = %d' % (n, a, b, c)
+            return power_mod(a, n // m, m) * b * c % m
 
-    fs = gen_fact_mod_prime(p)
-
-    a1, e1 = fact_mod(n, p, fs)
-    a2, e2 = fact_mod(r, p, fs)
-    a3, e3 = fact_mod((n - r), p, fs)
-
+    tmp = gen_fact_mod_prime(p)
     b = a
-    while b > 0 and (e1 - (e2 + e3)) < a:
-        b -= 1
+    while b > 0:
+        _, e1 = fact_mod(n, p, tmp)
+        _, e2 = fact_mod(r, p, tmp)
+        _, e3 = fact_mod(n - r, p, tmp)
+        if e1 >= e2 + e3 + b: break
+        b = b - 1
 
-    temp1 = modinv(n_fact_fact(r), m)
-    temp2 = modinv(n_fact_fact(n - r), m)
+    m1 = n_fact_fact(n)
+    m2 = n_fact_fact(r)
+    m3 = n_fact_fact(n - r)
 
-    print 'b = %d temp1 = %d temp2 = %d' % (b, temp1, temp2)
-    print 'n_fact_fact(5) = %d ' % n_fact_fact(5)
-    print 'n_fact_fact(2) = %d ' % n_fact_fact(2)
-    print 'n_fact_fact(3) = %d ' % n_fact_fact(3) 
+    print 'n = %d r = %d m = %d b = %d m1 = %d, m2 = %d m3 = %d' \
+        % (n, r, m, b, m1, m2, m3)
 
-    return ((p ** b) * n_fact_fact(n) * temp1 * temp2) % m
+    return (p ** b) * m1 * modinv(m2, m) * modinv(m3, m) % m
 
 
 def solve(n, r):
     xs = [27, 11, 13, 37]
     ass = [comb_mod2(n, r, x) for x in xs]
-    
+
     print xs
     print ass
-
     return chinese_remainder_theory(xs, ass)
 
-# if __name__ == '__main__':
-#     n = int(raw_input())
-#     for _ in range(n):
-#         n, r = map(int, raw_input().strip().split())
-#         print solve(n, r)
+if __name__ == '__main__':
+    n = int(raw_input())
+    for _ in range(n):
+        n, r = map(int, raw_input().strip().split())
+        print solve(n, r)[0]
