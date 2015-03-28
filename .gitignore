@@ -5,6 +5,7 @@ __pycache__/
 # Backup file
 .c9/*
 *~
+*.swp
 \#*\#
 
 # C extensions
