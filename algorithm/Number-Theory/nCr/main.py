@@ -1,5 +1,18 @@
 from __future__ import division
 from operator import add, mul
+import cProfile
+
+def memo(f):
+    cache = {}
+    def _f(*args):
+        try:
+            return cache[args]
+        except KeyError:
+            result = cache[args] = f(*args)
+            return result
+        except TypeError:
+            return f(*args)
+    return _f
 
 def mod(a, b):
     """
@@ -31,19 +44,8 @@ def exgcd(a, b):
         return (g, y, x - (a // b) * y)
 
 
-def power_mod(a, b, m):
-    """
-    Type :: (Int, Int, Int) -> Int
-    Return : Calculate and return a^b (mod m)
-    """
-    if b is 0:
-        return 1
-    elif b is 1:
-        return a % m
-    else:
-        tmp = power_mod(a, b // 2, m)
-        return tmp * tmp % m if b % 2 is 0 else tmp * tmp * a % m
 
+@memo
 def modinv(a, m):
     """
     Type :: (Int, Int) -> Int
@@ -62,11 +64,11 @@ def sieve(m):
     ret, judge = [], [True] * (m + 1)
     judge[0] = judge[1] = False
     ret.append(2)
-    for i in range(4, m + 1, 2): judge[i] = False
-    for i in range(3, m + 1, 2):
+    for i in xrange(4, m + 1, 2): judge[i] = False
+    for i in xrange(3, m + 1, 2):
         if judge[i]:
             ret.append(i)
-            for j in range(i * i, m + 1, i): judge[j] = False
+            for j in xrange(i * i, m + 1, i): judge[j] = False
     return ret
 
 
@@ -228,26 +230,26 @@ def chinese_remainder_theory(xs, ass):
     """
 
     ret = (ass[0], xs[0])
-    for i in range(1, len(xs)):
+    for i in xrange(1, len(xs)):
         ret = chinese_remainder_theory_for2(ret[1], ret[0], xs[i], ass[i])
         if ret[1] == -1: break
 
     return ret
 
 
-def comb_mod2(n, r, m):
+def comb_mod2(n, r, m, pa, facts1, facts2):
     """
     Type :: (Int, Int, Int) -> Int
     m is of form p^a, and n is very large
     """
-    p, a = factor(m)[0]
+    p, a = pa
 
-    facts = [1]
-    for i in range(1,m):
-        if gcd(i, m) == 1:
-            facts.append(facts[i - 1] * i % m)
-        else:
-            facts.append(facts[i - 1])
+    # facts = [1]
+    # for i in range(1,m):
+    #     if gcd(i, m) == 1:
+    #         facts.append(facts[i - 1] * i % m)
+    #     else:
+    #         facts.append(facts[i - 1])
 
     # print "===========facts================="
     # print facts
@@ -257,43 +259,78 @@ def comb_mod2(n, r, m):
         if n is 0 or n is 1:
             return 1
         elif n < m:
-            return facts[n] * n_fact_fact(n // p) % m
+            return facts1[n] * n_fact_fact(n // p) % m
         else:
-            a = facts[m - 1]
-            b = facts[n % m]
+            a = facts1[m - 1]
+            b = facts1[n % m]
             c = n_fact_fact(n // p)
             # print 'n = %d a = %d b = %d c = %d' % (n, a, b, c)
-            return power_mod(a, n // m, m) * b * c % m
+            return pow(a, n // m, m) * b * c % m
 
-    tmp = gen_fact_mod_prime(p)
-    b = a
-    while b > 0:
-        _, e1 = fact_mod(n, p, tmp)
-        _, e2 = fact_mod(r, p, tmp)
-        _, e3 = fact_mod(n - r, p, tmp)
-        if e1 >= e2 + e3 + b: break
-        b = b - 1
+    def get_power(n, p):
+        ret = 0
+        while n > 0:
+            ret += n // p
+            n //= p
+        return ret
+    # facts2 = gen_fact_mod_prime(p)
+    b = get_power(n, p) - get_power(r, p) - get_power(n - r, p)
+
+    if b >= a: return 0
 
     m1 = n_fact_fact(n)
     m2 = n_fact_fact(r)
     m3 = n_fact_fact(n - r)
 
-    print 'n = %d r = %d m = %d b = %d m1 = %d, m2 = %d m3 = %d' \
-        % (n, r, m, b, m1, m2, m3)
 
-    return (p ** b) * m1 * modinv(m2, m) * modinv(m3, m) % m
+    return (p ** b) * m1 * modinv_table[(m2, m)] * modinv_table[(m3, m)] % m
+    # return (p ** b) * m1 * modinv(m2, m) * modinv(m3, m) % m
 
 
-def solve(n, r):
+def solve(n, r, fs1, fs2, xss):
     xs = [27, 11, 13, 37]
-    ass = [comb_mod2(n, r, x) for x in xs]
+    ass = [comb_mod2(n, r, xs[i], xss[i], fs1[i], fs2[i]) for i in xrange(4)]
 
-    print xs
-    print ass
     return chinese_remainder_theory(xs, ass)
 
-if __name__ == '__main__':
+def init(xs):
+    ret1, ret2 = [], []
+
+    for i in xrange(len(xs)):
+        p, a = xs[i]
+        m = p ** a
+        t1, t2 = [1],[1]
+        for i in xrange(1, p):
+            t2.append(t2[-1] * i % p)
+
+        for i in xrange(1, m):
+            if gcd(i, m) == 1:
+                t1.append(t1[-1] * i % m)
+            else:
+                t1.append(t1[-1])
+        ret1.append(t1)
+        ret2.append(t2)
+    return ret1, ret2
+
+modinv_table = {}
+modulo = 142857
+
+for x in {27, 11, 13, 37}:
+    for y in xrange(1, x):
+        if gcd(x, y) == 1:
+            modinv_table[(y, x)] = modinv(y, x)
+
+
+
+def main():
     n = int(raw_input())
-    for _ in range(n):
+    xss = [(3,3), (11,1), (13, 1), (37, 1)]
+    facts1, facts2 = init(xss)
+
+    for _ in xrange(n):
         n, r = map(int, raw_input().strip().split())
-        print solve(n, r)[0]
+        print solve(n, r, facts1, facts2, xss)[0]
+
+if __name__ == '__main__':
+    main()
+    # cProfile.run('main()')
