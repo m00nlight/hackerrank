@@ -39,7 +39,7 @@ def power_mod(a, b, m):
         return 1
     else:
         tmp = power_mod(a, b // 2, m)
-        return tmp * tmp % m if b % 2 is 0 else tmp * tmp * a % p
+        return tmp * tmp % m if b % 2 is 0 else tmp * tmp * a % m
 
 def modinv(a, m):
     """
