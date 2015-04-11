@@ -237,23 +237,12 @@ def chinese_remainder_theory(xs, ass):
     return ret
 
 
-def comb_mod2(n, r, m, pa, facts1, facts2):
+def comb_mod2(n, r, m, pa, facts1):
     """
     Type :: (Int, Int, Int) -> Int
     m is of form p^a, and n is very large
     """
     p, a = pa
-
-    # facts = [1]
-    # for i in range(1,m):
-    #     if gcd(i, m) == 1:
-    #         facts.append(facts[i - 1] * i % m)
-    #     else:
-    #         facts.append(facts[i - 1])
-
-    # print "===========facts================="
-    # print facts
-    # print "================================="
 
     def n_fact_fact(n):
         if n is 0 or n is 1:
@@ -273,7 +262,6 @@ def comb_mod2(n, r, m, pa, facts1, facts2):
             ret += n // p
             n //= p
         return ret
-    # facts2 = gen_fact_mod_prime(p)
     b = get_power(n, p) - get_power(r, p) - get_power(n - r, p)
 
     if b >= a: return 0
@@ -284,12 +272,11 @@ def comb_mod2(n, r, m, pa, facts1, facts2):
 
 
     return (p ** b) * m1 * modinv_table[(m2, m)] * modinv_table[(m3, m)] % m
-    # return (p ** b) * m1 * modinv(m2, m) * modinv(m3, m) % m
 
 
 def solve(n, r, fs1, fs2, xss):
     xs = [27, 11, 13, 37]
-    ass = [comb_mod2(n, r, xs[i], xss[i], fs1[i], fs2[i]) for i in xrange(4)]
+    ass = [comb_mod2(n, r, xs[i], xss[i], fs1[i]) for i in xrange(4)]
 
     return chinese_remainder_theory(xs, ass)
 
