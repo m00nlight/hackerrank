@@ -30,17 +30,6 @@ def exgcd(a, b):
         return (g, y, x - (a // b) * y)
 
 
-def power_mod(a, b, m):
-    """
-    Type :: (Int, Int, Int) -> Int
-    Return : Calculate and return a^b (mod m)
-    """
-    if b is 0:
-        return 1
-    else:
-        tmp = power_mod(a, b // 2, m)
-        return tmp * tmp % m if b % 2 is 0 else tmp * tmp * a % m
-
 def modinv(a, m):
     """
     Type :: (Int, Int) -> Int
