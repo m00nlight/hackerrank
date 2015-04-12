@@ -46,53 +46,46 @@ def fib(A, B, N):
     mat = mat ** N
     return (row * mat).rows[0][0]
     
-def exgcd(m, n):
-    if n == 0:
-        return (m, 1, 0)
+def gcd(a, b):
+    """
+    Type :: (Int, Int) -> Int
+    Return :: Greatest Common divisor
+    """
+    while b != 0:
+        a, b = b, a % b
+    return a
+
+def exgcd(a, b):
+    """
+    Type :: (Int, Int) -> (Int, Int, Int)
+    Return :: (g, x, y), g is gcd of a and b and
+    x * a + y * b = g
+    """
+    if b == 0:
+        return (a, 1, 0)
     else:
-        g, x1, y1 = exgcd(n, m % n)
-        return (g, y1, x1 - y1 * (m // n))
-        
-def gcd(m, n):
-    return exgcd(m, n)[0]
+        g, x, y = exgcd(b, a % b)
+        return (g, y, x - (a // b) * y)
     
 def modinv(a, m):
-    g, x, y = exgcd(a, m)
-    
-    return (x + m) % m
-    
-def mlcm(a, b):
-    g, x, y = exgcd(a, b)
-    inv = modinv(g, MOD)
-    return a * b * inv % MOD
+    """
+    Type :: (Int, Int) -> Int
+    Return :: Return module inverse of a * x = 1 (mod m)
+    """
+    if gcd(a, m) != 1: 
+        raise Exception("Not coprime")
+    _, x, y = exgcd(a, m)
+    return (m + x % m) % m
     
 def lcm(a, b):
-    return a * b // gcd(a, b)
-    
-def test(times):
-    for _ in range(times):
-        arr = []
-        for _ in range(3):
-            arr.append(randrange(1, 20))
-        farr = map(lambda x: fib(0, 1, x), arr)
-        if reduce(lambda acc, x, : mlcm(acc, x), farr, farr[0]) != \
-            reduce(lambda acc, x : lcm(acc, x), farr, farr[0]) % MOD:
-            print 'mlcm = %d' % reduce(lambda acc, x, : mlcm(acc, x), farr, farr[0])
-            print 'lcm = %d' % (reduce(lambda acc, x: lcm(acc, x), farr, farr[0]) % MOD)
-            print arr
-            print farr
-            exit()
-    return 'test pass'
-            
-    
+    print 'gcd(a, b) = %d modinv = %d' %(gcd(a, b), modinv(gcd(a, b), MOD))
+    return a * b * modinv(gcd(a, b), MOD) % MOD
+
     
 if __name__ == '__main__':
-    if debug:
-        test()
-    else:
-        n = int(raw_input())
-        arr = []
-        for _ in range(n):
-            arr.append(fib(0, 1, int(raw_input())))
-        
-        print '%d' % (reduce(lambda acc, x: lcm(acc, x), arr, arr[0]) % MOD)
+    n = input()
+    arr = []
+    for _ in range(n):
+        arr.append(int(raw_input()))
+    print arr
+    print '%d' % reduce(lambda acc, x: )
