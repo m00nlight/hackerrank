@@ -263,6 +263,44 @@ _known_primes = [2, 3]
 _known_primes += [x for x in range(5, 1000, 2) if miller_rabin(x)]
 
 
+def baby_step(a, b, g):
+    """
+    Baby Step Giant step :: calculate a^x == b (mod g) for gcd(a, g) == 1
+    Type :: (Int, Int, Int) -> Int
+    Return :: Return minimum positive x for a^x == b (mod g)
+    Complexity :: O(Sqrt(g))
+
+    >>> baby_step(3, 2, 5)
+    3
+    >>> baby_step(2, 5, 11)
+    4
+    >>> baby_step(233529, 184091, 329746)
+    57897
+    >>> baby_step(26161, 23893, 62356)
+    223
+    >>> baby_step(126995, 142647, 270599)
+    204
+    """
+    q = int(g ** 0.5) + 1
+    aq = pow(a, q, g)
+    ai = modinv(a, g)
+
+    assert a * ai % g == 1
+
+    l = map(lambda i: pow(aq, i, g), xrange(q + 1))
+    r = map(lambda i: (b * pow(ai, i, g)) % g, xrange(q + 1))
+    xs = set()
+    for y in set(l) & set(r):
+        i = l.index(y)
+        j = r.index(y)
+        xs.add(i * q + j)
+
+    if not xs:
+        return -1
+    x = min(xs)
+    assert pow(a, x, g) == b
+    return x
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
