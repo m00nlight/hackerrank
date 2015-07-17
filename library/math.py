@@ -1,4 +1,5 @@
 from __future__ import division
+from math import pi, sin, cos
 
 def mod(a, b):
     """
@@ -300,6 +301,65 @@ def baby_step(a, b, g):
     x = min(xs)
     assert pow(a, x, g) == b
     return x
+
+
+def fft(xs):
+    """
+    Fast Fourier transform, algorithm
+    Type :: [Complex] -> [Complex]
+    Return :: A complex array of the transform
+    Complexity :: O(n * log(n)), n is the length of xs
+    Pre Require :: length of xs should be power of 2
+
+    >>> fft(ifft([complex(1, 0), complex(2, 0)])) == [complex(1, 0), complex(2, 0)]
+    True
+    """
+    if len(xs) == 1:
+        return xs
+    else:
+        n = len(xs)
+        wn = complex(cos(2 * pi / n), sin(2 * pi / n))
+        w = complex(1, 0)
+        a0 = [x[1] for x in filter(lambda x: x[0] % 2 == 0, zip(range(n), xs))]
+        a1 = [x[1] for x in filter(lambda x: x[0] % 2 == 1, zip(range(n), xs))]
+        y0 = fft(a0)
+        y1 = fft(a1)
+        ys = [complex(0, 0)] * n
+        for k in range(n // 2):
+            ys[k] = y0[k] + w * y1[k]
+            ys[k + n // 2] = y0[k] - w * y1[k]
+            w = w * wn
+        return ys
+
+
+def ifft(xs):
+    """
+    Inverse Fast Fourier transform algorithm
+    Type :: [Complex] -> [Complex]
+    Return :: A complex array of the inverse of fft
+    Complexity :: O(n * log(n)), n is the length of xs
+    Pre Require :: length of xs should be power of 2
+
+    >>> ifft(fft([complex(1, 0), complex(2, 0)])) == [complex(1, 0), complex(2, 0)]
+    True
+    """
+    if len(xs) == 1:
+        return xs
+    else:
+        n = len(xs)
+        wn = complex(cos(-2 * pi / n), sin(-2 * pi / n))
+        w = complex(1, 0)
+        a0 = [x[1] for x in filter(lambda x: x[0] % 2 == 0, zip(range(n), xs))]
+        a1 = [x[1] for x in filter(lambda x: x[0] % 2 == 1, zip(range(n), xs))]
+        y0 = fft(a0)
+        y1 = fft(a1)
+        ys = [complex(0, 0)]  * n
+        for k in range(n // 2):
+            ys[k] = y0[k] + w * y1[k]
+            ys[k + n // 2] = y0[k] - w * y1[k]
+            w = w * wn
+
+        return map(lambda x: complex(x.real / n, x.imag), ys)
 
 if __name__ == '__main__':
     import doctest
