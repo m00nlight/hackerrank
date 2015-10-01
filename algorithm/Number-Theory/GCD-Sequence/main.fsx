@@ -33,14 +33,14 @@ let func n r =
   ret
   
 let _ = 
-    let testCases = System.Int32.Parse(System.Console.ReadLine()) 
-    for t in 1..testCases do
-      let nk = System.Console.ReadLine().Trim().Split([|' '|]) 
-               |> Seq.toList 
-               |> List.map (fun x -> System.Int32.Parse(x))
-      let n = nk.[0]
-      let k = nk.[1]
-      let ans = [1..n]
-                |> Seq.fold (fun acc i -> 
-                   (acc + mmod + (func (n / i) k) * mu.[i]) % mmod) 0L
-      printfn "%d" ans
+  let testCases = System.Int32.Parse(System.Console.ReadLine()) 
+  for t in 1..testCases do
+    let nk = System.Console.ReadLine().Trim().Split([|' '|]) 
+              |> Seq.toList 
+              |> List.map (fun x -> System.Int32.Parse(x))
+    let n = nk.[0]
+    let k = nk.[1]
+    let ans = [1..n]
+              |> Seq.fold (fun acc i -> 
+                  (acc + mmod + (func (n / i) k) * mu.[i]) % mmod) 0L
+    printfn "%d" ans
