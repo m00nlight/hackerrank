@@ -36,7 +36,7 @@ def solve(n, moves):
         que = deque()
         vis = [[False for _ in range(n)] for _ in range(n)]
         for i in range(n):
-            if broad[0][i] == 1:
+            if broad[0][i] == -1:
                 que.append((0, i))
                 vis[0][i] = True
 
@@ -52,10 +52,12 @@ def solve(n, moves):
 
         return False
 
+
     
     rw , pw = False, False
     rw = roman_win()
     pw = persian_win()
+
 
     if rw:
         print("ROMANS")
