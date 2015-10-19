@@ -41,13 +41,13 @@ def solve(infos):
         xsInverse[xs[i]] = i
 
 
-    rmq = RMQ(len(xs))
+    rmq = RMQ(len(xs) + 1)
     for info in infos:
         idx = xsInverse[info[1]]
-        val = rmq.query(0, idx) + info[-1]
+        val = rmq.query(0, idx + 1) + info[-1]
         rmq.update(idx, val)
 
-    print("%d" % rmq.query(0, len(xs)))
+    print("%d" % rmq.query(0, len(xs) + 1))
 
     
     
