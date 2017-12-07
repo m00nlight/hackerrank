@@ -1,104 +1,109 @@
 ﻿open System
 
-type 'a tree = TreeNode of 'a * ('a tree list)
-
-(* 
- A path is either a Top or a node of it's left sibling list in reverse order
- its parent path, and its right sibling list.
-*)
 type 'a path = 
     | Top
-    | PathNode of ('a tree list) * ('a path) * ('a tree list) * 'a
+    | PathNode of ('a path list) * ('a path)  * ('a path list) * 'a * ('a path list)
 
-type 'a location = Loc of ('a tree) * ('a path)
-
-
-let goLeft (Loc(t, p)) = 
+let goLeft p = 
     match p with
-    | Top -> failwith "left of top"
-    | PathNode((TreeNode(value, _) as l):: left, up, right, _) -> Loc(l, PathNode(left, up, t :: right, value))
-    | PathNode([], _, _, _) -> failwith "left of the first"
+    | PathNode([], _, _, _, _) -> failwith "left of leftmost element"
+    | PathNode((PathNode(_, _, _, value, sons) as l) :: ls, up, rs, _, _) -> 
+        PathNode(ls, up, p :: rs, value, sons)
+    | _ -> failwith "should not happen"
 
 
-let goRight (Loc(t, p)) = 
+let goRight p = 
     match p with
-    | Top -> failwith "right of top"
-    | PathNode(left, up, (TreeNode(value, _) as r) :: right, _) -> Loc(r, PathNode(t :: left, up, right, value))
-    | PathNode(_, _, [], _) -> failwith "right of the last"
+    | PathNode(_, _, [], _, _) -> failwith "right of rightimost element"
+    | PathNode(ls, up, (PathNode(_, _, _, value, sons) as r) :: rs, _, _) -> 
+        PathNode( p :: ls, up, rs, value, sons)
+    | _ -> failwith "this should not happen"
 
 
-let goUp (Loc(t, p)) = 
+let goUp p = 
     match p with 
-    | Top -> failwith "up of top"
-    | PathNode(left, up, right, _) -> 
+    | Top -> failwith "up of top element"
+    | PathNode(left, up, right, _, _) -> 
         match up with
         | Top -> failwith "up with top"
-        | PathNode(_, _, _, value) -> Loc(TreeNode(value, (List.rev left) @ [t] @ right), up)
+        | PathNode(left', upup, right', value, _) -> 
+            PathNode(left', upup, right', value, (List.rev left) @ (p :: right))
 
 
-let goDown (Loc(t, p)) = 
-    match t with
-    | TreeNode(_, (TreeNode(value, _) as t') :: ts) -> Loc(t', PathNode([], p, ts, value))
-    | TreeNode(_, []) -> failwith "empty children to go down"
+let goDown p = 
+    match p with
+    | Top -> failwith "go down of top node"
+    | PathNode(_, _, _, _, []) -> failwith "no son of current node"
+    | PathNode(_, _, _, _, (PathNode(_, _, _, value, sons) as s) :: ss) -> 
+        PathNode([], p, ss, value,  sons)
+    | _ -> failwith "should not happen"
                                
-let rec nth loc = function
-    | 1 -> goDown loc
-    | n when n > 0 -> goRight (nth loc (n - 1))
+let rec nth p = function
+    | 1 -> goDown p
+    | n when n > 0 -> goRight (nth p (n - 1))
     | _ -> failwith "n must be greater or equal to zero"
 
 
-let changeValue (Loc(TreeNode(_, cs), p)) newValue = 
+let changeValue p newValue = 
     match p with
     | Top -> failwith "change value of top node"
-    | PathNode(left, up, right, _) -> Loc(TreeNode(newValue, cs), PathNode(left, up, right, newValue))
+    | PathNode(left, up, right, _, sons) -> PathNode(left, up, right, newValue, sons)
 
-let insertRight (Loc(t, p)) newValue = 
+let makeNode parent value = PathNode([], parent, [], value, [])
+
+let insertRight p newValue = 
     match p with
     | Top -> failwith "insert right of top"
-    | PathNode(left, up, right, curValue) -> Loc(t, PathNode(left, up, TreeNode(newValue, []) :: right, curValue))
+    | PathNode(left, up, right, curValue, sons) -> 
+        PathNode(left, up, (makeNode p newValue) :: right, curValue, sons)
 
-let insertLeft (Loc(t, p)) newValue = 
+let insertLeft p newValue = 
     match p with 
     | Top -> failwith "insert left of top"
-    | PathNode(left, up, right, curValue) -> Loc(t, PathNode(TreeNode(newValue, []) :: left, up, right, curValue))
+    | PathNode(left, up, right, curValue, sons) -> 
+        PathNode((makeNode p newValue) :: left, up,  right, curValue, sons)
 
-let insertDown (Loc(TreeNode(curValue, sons), p)) newValue = 
-    Loc(TreeNode(curValue, TreeNode(newValue, []) :: sons), p)
+let insertDown p newValue = 
+    match p with
+    | Top -> failwith "insert down of top node"
+    | PathNode(left, up, right, curValue, sons) -> 
+        PathNode(left, up, right, curValue, (makeNode p newValue) :: sons)
 
-let delete (Loc(t, p)) = 
+let delete p = 
     match p with
     | Top -> failwith "delete of path top"
-    | PathNode(left, up, right, _) -> 
+    | PathNode(left, up, right, _, _) -> 
         match up with
         | Top -> failwith "delete the root node"
-        | PathNode(_, _, _, curValue) -> Loc(TreeNode(curValue, (List.rev left) @ right), up)
+        | PathNode(left', upup, right', curValue, _) -> 
+            PathNode(left', upup, right', curValue, (List.rev left) @ right)
 
-let getCurrentValue (Loc(t, p)) =
-    match t with 
-    | TreeNode(currValue, _) -> currValue
+let getCurrentValue p =
+    match p with 
+    | Top -> failwith "get value of top node"
+    | PathNode(_, _, _, value, _) -> value
 
-let doOp op loc = 
+let doOp op p = 
     match op with
-    | [|"change"; value |] -> (None, changeValue loc (value |> int))
-    | [|"print" |] -> (Some(getCurrentValue loc), loc)
-    | [|"visit"; "left"|] -> (None, goLeft loc)
-    | [|"visit"; "right"|] -> (None, goRight loc)
-    | [|"visit"; "parent"|] -> (None, goUp loc)
-    | [|"visit"; "child"; n|] -> (None, nth loc (n |> int))
-    | [|"insert"; "left"; x|] -> (None, insertLeft loc (x |> int))
-    | [|"insert"; "right"; x|] -> (None, insertRight loc (x |> int))
-    | [|"insert"; "child"; x|] -> (None, insertDown loc (x |> int))
-    | [|"delete" |] -> (None, delete loc)
+    | [|"change"; value |] -> (None, changeValue p (value |> int))
+    | [|"print" |] -> (Some(getCurrentValue p), p)
+    | [|"visit"; "left"|] -> (None, goLeft p)
+    | [|"visit"; "right"|] -> (None, goRight p)
+    | [|"visit"; "parent"|] -> (None, goUp p)
+    | [|"visit"; "child"; n|] -> (None, nth p (n |> int))
+    | [|"insert"; "left"; x|] -> (None, insertLeft p (x |> int))
+    | [|"insert"; "right"; x|] -> (None, insertRight p (x |> int))
+    | [|"insert"; "child"; x|] -> (None, insertDown p (x |> int))
+    | [|"delete" |] -> (None, delete p)
     | _ -> failwith "unsupported operation"
 
 let solve ops = 
-    let tree = TreeNode(0, [])
-    let loc = Loc(tree, PathNode([], Top, [], 0))
+    let p = PathNode([], Top, [], 0, [])
     let (ans, _) = List.fold (fun (acc, loc) op ->
                                 match doOp op loc with
                                 | (None, nloc) -> (acc, nloc)
                                 | (Some v, nloc) -> (v :: acc, nloc))
-                        ([], loc) ops
+                        ([], p) ops
     List.rev ans
 
 [<EntryPoint>]
