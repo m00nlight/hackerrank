@@ -26,8 +26,8 @@ let goUp p =
     | PathNode(left, up, right, _, _) -> 
         match up with
         | Top -> failwith "up with top"
-        | PathNode(left', upup, right', value, _) -> 
-            PathNode(left', upup, right', value, (List.rev left) @ (p :: right))
+        | PathNode(left', up', right', value, _) -> 
+            PathNode(left', up', right', value, (List.rev left) @ (p :: right))
 
 
 let goDown p = 
@@ -75,8 +75,8 @@ let delete p =
     | PathNode(left, up, right, _, _) -> 
         match up with
         | Top -> failwith "delete the root node"
-        | PathNode(left', upup, right', curValue, _) -> 
-            PathNode(left', upup, right', curValue, (List.rev left) @ right)
+        | PathNode(left', up', right', curValue, _) -> 
+            PathNode(left', up', right', curValue, (List.rev left) @ right)
 
 let getCurrentValue p =
     match p with 
