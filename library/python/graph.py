@@ -1,24 +1,27 @@
-from __future__ import division
+#!/usr/bin/env python3
+
+from typing import List, Tuple, TypeVar
 from collections import defaultdict, deque
 from heapq import heappush, heappop
 from sys import stdin
 
+T = TypeVar('T')
+
 class UnionFindSet:
-    def __init__(self, nodes):
+    def __init__(self, nodes: List[T]) -> None:
         self.fa = {}
         for n in nodes:
             self.fa[n] = n
 
-    def find(self, x):
+    def find(self, x: T) -> T:
         if self.fa[x] == x:
             return x
         else:
             self.fa[x] = self.find(self.fa[x])
             return self.fa[x]
 
-    def union(self, x, y):
-        fx = self.find(x)
-        fy = self.find(y)
+    def union(self, x: T, y: T) -> T:
+        fx, fy = self.find(x), self.find(y)
         if fx == fy:
             return fx
         else:
@@ -34,7 +37,7 @@ graph["edges"] is a list of all edges in the graph in (x, y, w) form
   - x is the first nodes
   - y is the second nodes
   - w is the weight of the edges
-graph["relation"] is the graph relation of the graph
+graph["adj"] is the adjacent node with weight to each node
 """
 
 def kruscal(graph):
@@ -147,10 +150,7 @@ if __name__ == '__main__':
             negcycle = True
 
     if negcycle:
-        print "NEGATIVE CYCLE"
+        print("NEGATIVE CYCLE")
     else:
         for row in dis:
-            print ' '.join(map(lambda x: str(x) if x < 10 ** 20 else "INF", row))
-
-
-
+            print(' '.join(map(lambda x: str(x) if x < 10 ** 20 else "INF", row)))
